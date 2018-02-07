@@ -153,6 +153,11 @@
             - http://issues.umbraco.org/issue/U4-5391
             </remarks>
         </member>
+        <member name="M:Umbraco.Core.ApplicationContext.ResetUmbracoApplicationUrl">
+            <summary>
+            Resets the url.
+            </summary>
+        </member>
         <member name="P:Umbraco.Core.ApplicationContext.DatabaseContext">
             <summary>
             Gets the current DatabaseContext
@@ -1427,6 +1432,35 @@
             <summary>
             When set, DeepClone will always clone all items
             </summary>
+        </member>
+        <member name="T:Umbraco.Core.Collections.CompositeTypeTypeKey">
+            <summary>
+            Represents a composite key of (Type, Type) for fast dictionaries.
+            </summary>
+        </member>
+        <member name="M:Umbraco.Core.Collections.CompositeTypeTypeKey.#ctor(System.Type,System.Type)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Umbraco.Core.Collections.CompositeTypeTypeKey"/> struct.
+            </summary>
+        </member>
+        <member name="P:Umbraco.Core.Collections.CompositeTypeTypeKey.Type1">
+            <summary>
+            Gets the first type.
+            </summary>
+        </member>
+        <member name="P:Umbraco.Core.Collections.CompositeTypeTypeKey.Type2">
+            <summary>
+            Gets the second type.
+            </summary>
+        </member>
+        <member name="M:Umbraco.Core.Collections.CompositeTypeTypeKey.Equals(Umbraco.Core.Collections.CompositeTypeTypeKey)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Umbraco.Core.Collections.CompositeTypeTypeKey.Equals(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Umbraco.Core.Collections.CompositeTypeTypeKey.GetHashCode">
+            <inheritdoc/>
         </member>
         <member name="T:Umbraco.Core.ConcurrentHashSet`1">
             <summary>
@@ -4179,25 +4213,6 @@
             <para>If the scope exits without being completed, events are ignored.</para>
             </remarks>
         </member>
-        <member name="M:Umbraco.Core.Events.ScopeEventDispatcherBase.FilterSupersededAndUpdateToLatestEntity(System.Collections.Generic.IReadOnlyList{Umbraco.Core.Events.IEventDefinition})">
-            <summary>
-            This will iterate over the events (latest first) and filter out any events or entities in event args that are included 
-            in more recent events that Supersede previous ones. For example, If an Entity has been Saved and then Deleted, we don't want
-            to raise the Saved event (well actually we just don't want to include it in the args for that saved event)
-            </summary>
-            <param name="events"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Umbraco.Core.Events.ScopeEventDispatcherBase.IsFiltered(Umbraco.Core.Models.EntityBase.IEntity,Umbraco.Core.Events.ScopeEventDispatcherBase.EventDefinitionTypeData,System.Collections.Generic.List{System.Tuple{Umbraco.Core.Models.EntityBase.IEntity,Umbraco.Core.Events.ScopeEventDispatcherBase.EventDefinitionTypeData}})">
-            <summary>
-            This will check against all of the processed entity/events (allEntities) to see if this entity already exists in 
-            event args that supersede the event args being passed in and if so returns true.
-            </summary>
-            <param name="entity"></param>
-            <param name="eventDef"></param>
-            <param name="allEntities"></param>
-            <returns></returns>
-        </member>
         <member name="T:Umbraco.Core.Events.ScopeLifespanMessagesFactory">
             <summary>
             Stores the instance of EventMessages in the current scope.
@@ -5080,6 +5095,403 @@
             <summary>
             Simple abstraction to send an email message
             </summary>
+        </member>
+        <member name="T:Umbraco.Core.Logging.RollingFileCleanupAppender">
+            <summary>
+            This class will do the exact same thing as the RollingFileAppender that comes from log4net
+            With the extension, that it is able to do automatic cleanup of the logfiles in the directory where logging happens
+            
+            By specifying the properties MaxLogFileDays and BaseFilePattern, the files will automaticly get deleted when
+            the logger is configured(typically when the app starts). To utilize this appender swap out the type of the rollingFile appender
+            that ships with Umbraco, to be Umbraco.Core.Logging.RollingFileCleanupAppender, and add the maxLogFileDays and baseFilePattern elements 
+            to the configuration i.e.:
+            
+            <example>
+             <appender name="rollingFile" type="Log4netAwesomeness.CustomRollingFileAppender, Log4netAwesomeness">
+              <file type="log4net.Util.PatternString" value="App_Data\Logs\UmbracoTraceLog.%property{log4net:HostName}.txt" />
+               <lockingModel type="log4net.Appender.FileAppender+MinimalLock" />
+               <appendToFile value="true" />
+               <rollingStyle value="Date" />
+               <maximumFileSize value="5MB" />
+               <maxLogFileDays value="5"/>
+               <basefilePattern value="UmbracoTraceLog.*.txt.*"/>
+               <layout type="log4net.Layout.PatternLayout">
+                 <conversionPattern value=" %date [P%property{processId}/D%property{appDomainId}/T%thread] %-5level %logger - %message%newline" />
+               </layout>
+               <layout type="log4net.Layout.PatternLayout">
+                 <conversionPattern value=" %date [P%property{processId}/D%property{appDomainId}/T%thread] %-5level %logger - %message%newline" />
+               </layout>
+               <encoding value="utf-8" />
+             </appender>
+            </example>
+            </summary>
+        </member>
+        <member name="M:Umbraco.Core.Logging.RollingFileCleanupAppender.OpenFile(System.String,System.Boolean)">
+            <summary>
+            This override will delete logs older than the specified amount of days
+            </summary>
+            <param name="fileName"></param>
+            <param name="append"></param>
+        </member>
+        <member name="T:Umbraco.Core.Logging.AsyncForwardingAppenderBase">
+            <summary>
+            Borrowed from https://github.com/cjbhaines/Log4Net.Async - will reference Nuget packages directly in v8
+            </summary>
+        </member>
+        <member name="P:Umbraco.Core.Logging.AsyncForwardingAppenderBase.HttpContext">
+            <summary>
+            Returns HttpContext.Current
+            </summary>
+        </member>
+        <member name="P:Umbraco.Core.Logging.AsyncForwardingAppenderBase.InternalLoggerName">
+            <summary>
+            The logger name that will be used for logging internal errors.
+            </summary>
+        </member>
+        <member name="T:Umbraco.Core.Logging.ImageProcessorLogger">
+            <summary>
+            A logger for explicitly logging ImageProcessor exceptions.
+            <remarks>
+            Creating this logger is enough for ImageProcessor to find and replace its in-built debug logger
+            without any additional configuration required. This class currently has to be public in order 
+            to do so.
+            </remarks>
+            </summary>
+        </member>
+        <member name="M:Umbraco.Core.Logging.ImageProcessorLogger.Log``1(System.String,System.String,System.Int32)">
+            <summary>
+            Logs the specified message as an error.
+            </summary>
+            <typeparam name="T">The type calling the logger.</typeparam>
+            <param name="text">The message to log.</param>
+            <param name="callerName">The property or method name calling the log.</param>
+            <param name="lineNumber">The line number where the method is called.</param>
+        </member>
+        <member name="M:Umbraco.Core.Logging.ImageProcessorLogger.Log(System.Type,System.String,System.String,System.Int32)">
+            <summary>
+            Logs the specified message as an error.
+            </summary>
+            <param name="type">The type calling the logger.</param>
+            <param name="text">The message to log.</param>
+            <param name="callerName">The property or method name calling the log.</param>
+            <param name="lineNumber">The line number where the method is called.</param>
+        </member>
+        <member name="T:Umbraco.Core.Logging.IQueue`1">
+            <summary>
+            Borrowed from https://github.com/cjbhaines/Log4Net.Async - will reference Nuget packages directly in v8
+            </summary>
+            <typeparam name="T"></typeparam>
+        </member>
+        <member name="T:Umbraco.Core.Logging.LoggingEventContext">
+            <remarks>
+            Borrowed from https://github.com/cjbhaines/Log4Net.Async - will reference Nuget packages directly in v8
+            </remarks>
+        </member>
+        <member name="T:Umbraco.Core.Logging.LoggingEventHelper">
+            <remarks>
+            Borrowed from https://github.com/cjbhaines/Log4Net.Async - will reference Nuget packages directly in v8
+            </remarks>
+        </member>
+        <member name="T:Umbraco.Core.Logging.RingBuffer`1">
+            <summary>
+            Borrowed from https://github.com/cjbhaines/Log4Net.Async - will reference Nuget packages directly in v8
+            </summary>
+            <typeparam name="T"></typeparam>
+        </member>
+        <member name="M:Umbraco.Core.Logging.OwinLogger.WriteCore(System.Diagnostics.TraceEventType,System.Int32,System.Object,System.Exception,System.Func{System.Object,System.Exception,System.String})">
+            <summary>
+            Aggregates most logging patterns to a single method.  This must be compatible with the Func representation in the OWIN environment.
+                        To check IsEnabled call WriteCore with only TraceEventType and check the return value, no event will be written.
+            </summary>
+            <param name="eventType"/><param name="eventId"/><param name="state"/><param name="exception"/><param name="formatter"/>
+            <returns/>
+        </member>
+        <member name="M:Umbraco.Core.Logging.OwinLoggerFactory.Create(System.String)">
+            <summary>
+            Creates a new ILogger instance of the given name.
+            </summary>
+            <param name="name"/>
+            <returns/>
+        </member>
+        <member name="T:Umbraco.Core.Logging.ParallelForwardingAppender">
+            <summary>
+            An asynchronous appender based on <see cref="T:System.Collections.Concurrent.BlockingCollection`1"/>
+            </summary>
+            <remarks>
+            Borrowed from https://github.com/cjbhaines/Log4Net.Async - will reference Nuget packages directly in v8
+            </remarks>
+        </member>
+        <member name="T:Umbraco.Core.Logging.DebugDiagnosticsLogger">
+            <summary>
+            Implements <see cref="T:Umbraco.Core.Logging.ILogger"/> on top of System.Diagnostics.Debug.
+            </summary>
+            <remarks>Useful for tests.</remarks>
+        </member>
+        <member name="T:Umbraco.Core.Logging.AppDomainTokenConverter">
+            <summary>
+            Allows for outputting a normalized appdomainappid token in a log format
+            </summary>
+        </member>
+        <member name="T:Umbraco.Core.Logging.LoggerExtensions">
+            <summary>
+            Allows for strongly typed log sources
+            </summary>
+        </member>
+        <member name="M:Umbraco.Core.Logging.LoggerExtensions.Error``1(Umbraco.Core.Logging.ILogger,System.String,System.Exception)">
+            <summary>
+            Adds an error log
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="logger"></param>
+            <param name="message"></param>
+            <param name="exception"></param>
+        </member>
+        <member name="M:Umbraco.Core.Logging.LoggerExtensions.Warn``1(Umbraco.Core.Logging.ILogger,System.String,System.Func{System.Object}[])">
+            <summary>
+            Adds a warn log
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="logger"></param>
+            <param name="message"></param>
+            <param name="formatItems"></param>
+        </member>
+        <member name="M:Umbraco.Core.Logging.LoggerExtensions.Info``1(Umbraco.Core.Logging.ILogger,System.String,System.Func{System.Object}[])">
+            <summary>
+            Traces a message, only generating the message if tracing is actually enabled. Use this method to avoid calling any long-running methods such as "ToDebugString" if logging is disabled.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="logger"></param>
+            <param name="generateMessageFormat">The generate message format.</param>
+            <param name="formatItems">The format items.</param>
+            <remarks></remarks>
+        </member>
+        <member name="M:Umbraco.Core.Logging.LoggerExtensions.Info``1(Umbraco.Core.Logging.ILogger,System.Func{System.String})">
+            <summary>
+            Traces a message, only generating the message if tracing is actually enabled. Use this method to avoid calling any long-running methods such as "ToDebugString" if logging is disabled.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="logger"></param>
+            <param name="generateMessage">The delegate to generate a message.</param>
+            <remarks></remarks>
+        </member>
+        <member name="M:Umbraco.Core.Logging.LoggerExtensions.Debug``1(Umbraco.Core.Logging.ILogger,System.Func{System.String})">
+            <summary>
+            Debugs a message, only generating the message if tracing is actually enabled. Use this method to avoid calling any long-running methods such as "ToDebugString" if logging is disabled.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="logger"></param>
+            <param name="generateMessage">The delegate to generate a message.</param>
+            <remarks></remarks>
+        </member>
+        <member name="M:Umbraco.Core.Logging.LoggerExtensions.Debug``1(Umbraco.Core.Logging.ILogger,System.String,System.Func{System.Object}[])">
+            <summary>
+            Debugs a message, only generating the message if debug is actually enabled. Use this method to avoid calling any long-running methods such as "ToDebugString" if logging is disabled.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="logger"></param>
+            <param name="generateMessageFormat">The generate message format.</param>
+            <param name="formatItems">The format items.</param>
+            <remarks></remarks>
+        </member>
+        <member name="M:Umbraco.Core.Logging.LoggerResolver.SetLogger(Umbraco.Core.Logging.ILogger)">
+            <summary>
+            Method allowing to change the logger during startup
+            </summary>
+            <param name="profiler"></param>
+        </member>
+        <member name="P:Umbraco.Core.Logging.LoggerResolver.Logger">
+            <summary>
+            Gets the current logger
+            </summary>
+        </member>
+        <member name="T:Umbraco.Core.Logging.ProfilingLogger">
+            <summary>
+            Used to create DisposableTimer instances for debugging or tracing durations
+            </summary>
+        </member>
+        <member name="T:Umbraco.Core.Logging.ILogger">
+            <summary>
+            Interface for logging service.
+            </summary>
+        </member>
+        <member name="T:Umbraco.Core.Logging.Logger">
+            <summary>
+             Used for logging
+            </summary>
+        </member>
+        <member name="M:Umbraco.Core.Logging.Logger.CreateWithDefaultLog4NetConfiguration">
+            <summary>
+            Creates a logger with the default log4net configuration discovered (i.e. from the web.config)
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Umbraco.Core.Logging.Logger.LoggerFor``1">
+            <summary>
+             Returns a logger for the type specified
+            </summary>
+            <typeparam name="T"></typeparam>
+            <returns></returns>
+        </member>
+        <member name="M:Umbraco.Core.Logging.Logger.LoggerFor(System.Object)">
+            <summary>
+            Returns a logger for the object's type
+            </summary>
+            <param name="getTypeFromInstance"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Umbraco.Core.Logging.Logger.Info(System.Type,System.Func{System.String})">
+            <summary>
+            Traces if tracing is enabled.
+            </summary>
+            <param name="callingType"></param>
+            <param name="generateMessage"></param>
+        </member>
+        <member name="M:Umbraco.Core.Logging.Logger.Info(System.Type,System.String,System.Func{System.Object}[])">
+            <summary>
+            Traces if tracing is enabled.
+            </summary>
+            <param name="type">The type for the logging namespace.</param>
+            <param name="generateMessageFormat">The message format.</param>
+            <param name="formatItems">The format items.</param>
+        </member>
+        <member name="M:Umbraco.Core.Logging.Logger.Debug(System.Type,System.Func{System.String})">
+            <summary>
+            Debugs if tracing is enabled.
+            </summary>
+            <param name="callingType"></param>
+            <param name="generateMessage"></param>
+        </member>
+        <member name="M:Umbraco.Core.Logging.Logger.Debug(System.Type,System.String,System.Func{System.Object}[])">
+            <summary>
+            Debugs if tracing is enabled.
+            </summary>
+            <param name="type">The type for the logging namespace.</param>
+            <param name="generateMessageFormat">The message format.</param>
+            <param name="formatItems">The format items.</param>
+        </member>
+        <member name="T:Umbraco.Core.Logging.AsynchronousRollingFileAppender">
+            <summary>
+            Based on https://github.com/cjbhaines/Log4Net.Async
+            which is based on code by Chris Haines http://cjbhaines.wordpress.com/2012/02/13/asynchronous-log4net-appenders/
+            This is an old/deprecated logger and has been superceded by ParallelForwardingAppender which is included in Umbraco and 
+            also by AsyncForwardingAppender in the Log4Net.Async library.
+            </summary>
+        </member>
+        <member name="M:Umbraco.Core.Logging.LoggingTaskExtension.LogErrors(System.Threading.Tasks.Task,System.Action{System.String,System.Exception})">
+            <summary>
+                This task shouldn't be waited on (as it's not guaranteed to run), and you shouldn't wait on the parent task either (because it might throw an 
+                exception that doesn't get handled). If you want to be waiting on something, use LogErrorsWaitable instead.
+            
+                None of these methods are suitable for tasks that return a value. If you're wanting a result, you should probably be handling
+                errors yourself.
+            </summary>
+        </member>
+        <member name="M:Umbraco.Core.Logging.LoggingTaskExtension.LogErrorsWaitable(System.Threading.Tasks.Task,System.Action{System.String,System.Exception})">
+            <summary>
+                This task can be waited on (as it's guaranteed to run), and you should wait on this rather than the parent task. Because it's
+                guaranteed to run, it may be slower than using LogErrors, and you should consider using that method if you don't want to wait.
+            
+                None of these methods are suitable for tasks that return a value. If you're wanting a result, you should probably be handling
+                errors yourself.
+            </summary>
+        </member>
+        <member name="T:Umbraco.Core.Logging.LogHelper">
+            <summary>
+             Used for logging, ILogger should be used instead but this is available for static access to logging
+            </summary>
+             <remarks>
+             this wraps ILogger 
+             </remarks>
+        </member>
+        <member name="M:Umbraco.Core.Logging.LogHelper.Error``1(System.String,System.Exception)">
+            <summary>
+            Adds an error log
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="message"></param>
+            <param name="exception"></param>
+        </member>
+        <member name="M:Umbraco.Core.Logging.LogHelper.Warn``1(System.String,System.Func{System.Object}[])">
+            <summary>
+            Adds a warn log
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="message"></param>
+            <param name="formatItems"></param>
+        </member>
+        <member name="M:Umbraco.Core.Logging.LogHelper.Info``1(System.Func{System.String})">
+            <summary>
+            Traces a message, only generating the message if tracing is actually enabled. Use this method to avoid calling any long-running methods such as "ToDebugString" if logging is disabled.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="generateMessage">The delegate to generate a message.</param>
+            <remarks></remarks>
+        </member>
+        <member name="M:Umbraco.Core.Logging.LogHelper.Info(System.Type,System.Func{System.String})">
+            <summary>
+            Traces if tracing is enabled.
+            </summary>
+            <param name="callingType"></param>
+            <param name="generateMessage"></param>
+        </member>
+        <member name="M:Umbraco.Core.Logging.LogHelper.Info(System.Type,System.String,System.Func{System.Object}[])">
+            <summary>
+            Traces if tracing is enabled.
+            </summary>
+            <param name="type">The type for the logging namespace.</param>
+            <param name="generateMessageFormat">The message format.</param>
+            <param name="formatItems">The format items.</param>
+        </member>
+        <member name="M:Umbraco.Core.Logging.LogHelper.Info``1(System.String,System.Func{System.Object}[])">
+            <summary>
+            Traces a message, only generating the message if tracing is actually enabled. Use this method to avoid calling any long-running methods such as "ToDebugString" if logging is disabled.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="generateMessageFormat">The generate message format.</param>
+            <param name="formatItems">The format items.</param>
+            <remarks></remarks>
+        </member>
+        <member name="M:Umbraco.Core.Logging.LogHelper.Debug``1(System.Func{System.String})">
+            <summary>
+            Debugs a message, only generating the message if tracing is actually enabled. Use this method to avoid calling any long-running methods such as "ToDebugString" if logging is disabled.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="generateMessage">The delegate to generate a message.</param>
+            <remarks></remarks>
+        </member>
+        <member name="M:Umbraco.Core.Logging.LogHelper.Debug(System.Type,System.Func{System.String})">
+            <summary>
+            Debugs if tracing is enabled.
+            </summary>
+            <param name="callingType"></param>
+            <param name="generateMessage"></param>
+        </member>
+        <member name="M:Umbraco.Core.Logging.LogHelper.Debug(System.Type,System.String,System.Func{System.Object}[])">
+            <summary>
+            Debugs if tracing is enabled.
+            </summary>
+            <param name="type">The type for the logging namespace.</param>
+            <param name="generateMessageFormat">The message format.</param>
+            <param name="formatItems">The format items.</param>
+        </member>
+        <member name="M:Umbraco.Core.Logging.LogHelper.Debug``1(System.String,System.Func{System.Object}[])">
+            <summary>
+            Debugs a message, only generating the message if debug is actually enabled. Use this method to avoid calling any long-running methods such as "ToDebugString" if logging is disabled.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="generateMessageFormat">The generate message format.</param>
+            <param name="formatItems">The format items.</param>
+            <remarks></remarks>
+        </member>
+        <member name="M:Umbraco.Core.Logging.LogHelper.Debug``1(System.String,System.Boolean,System.Func{System.Object}[])">
+            <summary>
+            Debugs a message and also writes to the TraceContext specified, useful for when you would like the debug
+            output also displayed in the Http trace output.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="generateMessageFormat"></param>
+            <param name="showHttpTrace"></param>
+            <param name="formatItems"></param>
         </member>
         <member name="T:Umbraco.Core.Models.EntityBase.IRememberBeingDirty">
             <summary>
@@ -9543,7 +9955,7 @@
         </member>
         <member name="F:Umbraco.Core.Models.UmbracoObjectTypes.DocumentBlueprint">
             <summary>
-            Document
+            Document Blueprint
             </summary>
         </member>
         <member name="F:Umbraco.Core.Models.UmbracoObjectTypes.IdReservation">
@@ -11718,6 +12130,17 @@
             <see cref="T:System.DateTimeOffset"/>.
             </returns>
         </member>
+        <member name="P:Umbraco.Core.IO.IOHelper.ForceNotHosted">
+            <summary>
+            Gets or sets a value forcing Umbraco to consider it is non-hosted.
+            </summary>
+            <remarks>This should always be false, unless unit testing.</remarks>
+        </member>
+        <member name="P:Umbraco.Core.IO.IOHelper.IsHosted">
+            <summary>
+            Gets a value indicating whether Umbraco is hosted.
+            </summary>
+        </member>
         <member name="M:Umbraco.Core.IO.IOHelper.VerifyEditPath(System.String,System.String)">
             <summary>
             Verifies that the current filepath matches a directory where the user is allowed to edit a file.
@@ -11951,366 +12374,6 @@
             <summary>
             Gets the root path of the application
             </summary>
-        </member>
-        <member name="T:Umbraco.Core.Logging.AsyncForwardingAppenderBase">
-            <summary>
-            Borrowed from https://github.com/cjbhaines/Log4Net.Async - will reference Nuget packages directly in v8
-            </summary>
-        </member>
-        <member name="P:Umbraco.Core.Logging.AsyncForwardingAppenderBase.HttpContext">
-            <summary>
-            Returns HttpContext.Current
-            </summary>
-        </member>
-        <member name="P:Umbraco.Core.Logging.AsyncForwardingAppenderBase.InternalLoggerName">
-            <summary>
-            The logger name that will be used for logging internal errors.
-            </summary>
-        </member>
-        <member name="T:Umbraco.Core.Logging.ImageProcessorLogger">
-            <summary>
-            A logger for explicitly logging ImageProcessor exceptions.
-            <remarks>
-            Creating this logger is enough for ImageProcessor to find and replace its in-built debug logger
-            without any additional configuration required. This class currently has to be public in order 
-            to do so.
-            </remarks>
-            </summary>
-        </member>
-        <member name="M:Umbraco.Core.Logging.ImageProcessorLogger.Log``1(System.String,System.String,System.Int32)">
-            <summary>
-            Logs the specified message as an error.
-            </summary>
-            <typeparam name="T">The type calling the logger.</typeparam>
-            <param name="text">The message to log.</param>
-            <param name="callerName">The property or method name calling the log.</param>
-            <param name="lineNumber">The line number where the method is called.</param>
-        </member>
-        <member name="M:Umbraco.Core.Logging.ImageProcessorLogger.Log(System.Type,System.String,System.String,System.Int32)">
-            <summary>
-            Logs the specified message as an error.
-            </summary>
-            <param name="type">The type calling the logger.</param>
-            <param name="text">The message to log.</param>
-            <param name="callerName">The property or method name calling the log.</param>
-            <param name="lineNumber">The line number where the method is called.</param>
-        </member>
-        <member name="T:Umbraco.Core.Logging.IQueue`1">
-            <summary>
-            Borrowed from https://github.com/cjbhaines/Log4Net.Async - will reference Nuget packages directly in v8
-            </summary>
-            <typeparam name="T"></typeparam>
-        </member>
-        <member name="T:Umbraco.Core.Logging.LoggingEventContext">
-            <remarks>
-            Borrowed from https://github.com/cjbhaines/Log4Net.Async - will reference Nuget packages directly in v8
-            </remarks>
-        </member>
-        <member name="T:Umbraco.Core.Logging.LoggingEventHelper">
-            <remarks>
-            Borrowed from https://github.com/cjbhaines/Log4Net.Async - will reference Nuget packages directly in v8
-            </remarks>
-        </member>
-        <member name="T:Umbraco.Core.Logging.RingBuffer`1">
-            <summary>
-            Borrowed from https://github.com/cjbhaines/Log4Net.Async - will reference Nuget packages directly in v8
-            </summary>
-            <typeparam name="T"></typeparam>
-        </member>
-        <member name="M:Umbraco.Core.Logging.OwinLogger.WriteCore(System.Diagnostics.TraceEventType,System.Int32,System.Object,System.Exception,System.Func{System.Object,System.Exception,System.String})">
-            <summary>
-            Aggregates most logging patterns to a single method.  This must be compatible with the Func representation in the OWIN environment.
-                        To check IsEnabled call WriteCore with only TraceEventType and check the return value, no event will be written.
-            </summary>
-            <param name="eventType"/><param name="eventId"/><param name="state"/><param name="exception"/><param name="formatter"/>
-            <returns/>
-        </member>
-        <member name="M:Umbraco.Core.Logging.OwinLoggerFactory.Create(System.String)">
-            <summary>
-            Creates a new ILogger instance of the given name.
-            </summary>
-            <param name="name"/>
-            <returns/>
-        </member>
-        <member name="T:Umbraco.Core.Logging.ParallelForwardingAppender">
-            <summary>
-            An asynchronous appender based on <see cref="T:System.Collections.Concurrent.BlockingCollection`1"/>
-            </summary>
-            <remarks>
-            Borrowed from https://github.com/cjbhaines/Log4Net.Async - will reference Nuget packages directly in v8
-            </remarks>
-        </member>
-        <member name="T:Umbraco.Core.Logging.DebugDiagnosticsLogger">
-            <summary>
-            Implements <see cref="T:Umbraco.Core.Logging.ILogger"/> on top of System.Diagnostics.Debug.
-            </summary>
-            <remarks>Useful for tests.</remarks>
-        </member>
-        <member name="T:Umbraco.Core.Logging.AppDomainTokenConverter">
-            <summary>
-            Allows for outputting a normalized appdomainappid token in a log format
-            </summary>
-        </member>
-        <member name="T:Umbraco.Core.Logging.LoggerExtensions">
-            <summary>
-            Allows for strongly typed log sources
-            </summary>
-        </member>
-        <member name="M:Umbraco.Core.Logging.LoggerExtensions.Error``1(Umbraco.Core.Logging.ILogger,System.String,System.Exception)">
-            <summary>
-            Adds an error log
-            </summary>
-            <typeparam name="T"></typeparam>
-            <param name="logger"></param>
-            <param name="message"></param>
-            <param name="exception"></param>
-        </member>
-        <member name="M:Umbraco.Core.Logging.LoggerExtensions.Warn``1(Umbraco.Core.Logging.ILogger,System.String,System.Func{System.Object}[])">
-            <summary>
-            Adds a warn log
-            </summary>
-            <typeparam name="T"></typeparam>
-            <param name="logger"></param>
-            <param name="message"></param>
-            <param name="formatItems"></param>
-        </member>
-        <member name="M:Umbraco.Core.Logging.LoggerExtensions.Info``1(Umbraco.Core.Logging.ILogger,System.String,System.Func{System.Object}[])">
-            <summary>
-            Traces a message, only generating the message if tracing is actually enabled. Use this method to avoid calling any long-running methods such as "ToDebugString" if logging is disabled.
-            </summary>
-            <typeparam name="T"></typeparam>
-            <param name="logger"></param>
-            <param name="generateMessageFormat">The generate message format.</param>
-            <param name="formatItems">The format items.</param>
-            <remarks></remarks>
-        </member>
-        <member name="M:Umbraco.Core.Logging.LoggerExtensions.Info``1(Umbraco.Core.Logging.ILogger,System.Func{System.String})">
-            <summary>
-            Traces a message, only generating the message if tracing is actually enabled. Use this method to avoid calling any long-running methods such as "ToDebugString" if logging is disabled.
-            </summary>
-            <typeparam name="T"></typeparam>
-            <param name="logger"></param>
-            <param name="generateMessage">The delegate to generate a message.</param>
-            <remarks></remarks>
-        </member>
-        <member name="M:Umbraco.Core.Logging.LoggerExtensions.Debug``1(Umbraco.Core.Logging.ILogger,System.Func{System.String})">
-            <summary>
-            Debugs a message, only generating the message if tracing is actually enabled. Use this method to avoid calling any long-running methods such as "ToDebugString" if logging is disabled.
-            </summary>
-            <typeparam name="T"></typeparam>
-            <param name="logger"></param>
-            <param name="generateMessage">The delegate to generate a message.</param>
-            <remarks></remarks>
-        </member>
-        <member name="M:Umbraco.Core.Logging.LoggerExtensions.Debug``1(Umbraco.Core.Logging.ILogger,System.String,System.Func{System.Object}[])">
-            <summary>
-            Debugs a message, only generating the message if debug is actually enabled. Use this method to avoid calling any long-running methods such as "ToDebugString" if logging is disabled.
-            </summary>
-            <typeparam name="T"></typeparam>
-            <param name="logger"></param>
-            <param name="generateMessageFormat">The generate message format.</param>
-            <param name="formatItems">The format items.</param>
-            <remarks></remarks>
-        </member>
-        <member name="M:Umbraco.Core.Logging.LoggerResolver.SetLogger(Umbraco.Core.Logging.ILogger)">
-            <summary>
-            Method allowing to change the logger during startup
-            </summary>
-            <param name="profiler"></param>
-        </member>
-        <member name="P:Umbraco.Core.Logging.LoggerResolver.Logger">
-            <summary>
-            Gets the current logger
-            </summary>
-        </member>
-        <member name="T:Umbraco.Core.Logging.ProfilingLogger">
-            <summary>
-            Used to create DisposableTimer instances for debugging or tracing durations
-            </summary>
-        </member>
-        <member name="T:Umbraco.Core.Logging.ILogger">
-            <summary>
-            Interface for logging service.
-            </summary>
-        </member>
-        <member name="T:Umbraco.Core.Logging.Logger">
-            <summary>
-             Used for logging
-            </summary>
-        </member>
-        <member name="M:Umbraco.Core.Logging.Logger.CreateWithDefaultLog4NetConfiguration">
-            <summary>
-            Creates a logger with the default log4net configuration discovered (i.e. from the web.config)
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:Umbraco.Core.Logging.Logger.LoggerFor``1">
-            <summary>
-             Returns a logger for the type specified
-            </summary>
-            <typeparam name="T"></typeparam>
-            <returns></returns>
-        </member>
-        <member name="M:Umbraco.Core.Logging.Logger.LoggerFor(System.Object)">
-            <summary>
-            Returns a logger for the object's type
-            </summary>
-            <param name="getTypeFromInstance"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Umbraco.Core.Logging.Logger.Info(System.Type,System.Func{System.String})">
-            <summary>
-            Traces if tracing is enabled.
-            </summary>
-            <param name="callingType"></param>
-            <param name="generateMessage"></param>
-        </member>
-        <member name="M:Umbraco.Core.Logging.Logger.Info(System.Type,System.String,System.Func{System.Object}[])">
-            <summary>
-            Traces if tracing is enabled.
-            </summary>
-            <param name="type">The type for the logging namespace.</param>
-            <param name="generateMessageFormat">The message format.</param>
-            <param name="formatItems">The format items.</param>
-        </member>
-        <member name="M:Umbraco.Core.Logging.Logger.Debug(System.Type,System.Func{System.String})">
-            <summary>
-            Debugs if tracing is enabled.
-            </summary>
-            <param name="callingType"></param>
-            <param name="generateMessage"></param>
-        </member>
-        <member name="M:Umbraco.Core.Logging.Logger.Debug(System.Type,System.String,System.Func{System.Object}[])">
-            <summary>
-            Debugs if tracing is enabled.
-            </summary>
-            <param name="type">The type for the logging namespace.</param>
-            <param name="generateMessageFormat">The message format.</param>
-            <param name="formatItems">The format items.</param>
-        </member>
-        <member name="T:Umbraco.Core.Logging.AsynchronousRollingFileAppender">
-            <summary>
-            Based on https://github.com/cjbhaines/Log4Net.Async
-            which is based on code by Chris Haines http://cjbhaines.wordpress.com/2012/02/13/asynchronous-log4net-appenders/
-            This is an old/deprecated logger and has been superceded by ParallelForwardingAppender which is included in Umbraco and 
-            also by AsyncForwardingAppender in the Log4Net.Async library.
-            </summary>
-        </member>
-        <member name="M:Umbraco.Core.Logging.LoggingTaskExtension.LogErrors(System.Threading.Tasks.Task,System.Action{System.String,System.Exception})">
-            <summary>
-                This task shouldn't be waited on (as it's not guaranteed to run), and you shouldn't wait on the parent task either (because it might throw an 
-                exception that doesn't get handled). If you want to be waiting on something, use LogErrorsWaitable instead.
-            
-                None of these methods are suitable for tasks that return a value. If you're wanting a result, you should probably be handling
-                errors yourself.
-            </summary>
-        </member>
-        <member name="M:Umbraco.Core.Logging.LoggingTaskExtension.LogErrorsWaitable(System.Threading.Tasks.Task,System.Action{System.String,System.Exception})">
-            <summary>
-                This task can be waited on (as it's guaranteed to run), and you should wait on this rather than the parent task. Because it's
-                guaranteed to run, it may be slower than using LogErrors, and you should consider using that method if you don't want to wait.
-            
-                None of these methods are suitable for tasks that return a value. If you're wanting a result, you should probably be handling
-                errors yourself.
-            </summary>
-        </member>
-        <member name="T:Umbraco.Core.Logging.LogHelper">
-            <summary>
-             Used for logging, ILogger should be used instead but this is available for static access to logging
-            </summary>
-             <remarks>
-             this wraps ILogger 
-             </remarks>
-        </member>
-        <member name="M:Umbraco.Core.Logging.LogHelper.Error``1(System.String,System.Exception)">
-            <summary>
-            Adds an error log
-            </summary>
-            <typeparam name="T"></typeparam>
-            <param name="message"></param>
-            <param name="exception"></param>
-        </member>
-        <member name="M:Umbraco.Core.Logging.LogHelper.Warn``1(System.String,System.Func{System.Object}[])">
-            <summary>
-            Adds a warn log
-            </summary>
-            <typeparam name="T"></typeparam>
-            <param name="message"></param>
-            <param name="formatItems"></param>
-        </member>
-        <member name="M:Umbraco.Core.Logging.LogHelper.Info``1(System.Func{System.String})">
-            <summary>
-            Traces a message, only generating the message if tracing is actually enabled. Use this method to avoid calling any long-running methods such as "ToDebugString" if logging is disabled.
-            </summary>
-            <typeparam name="T"></typeparam>
-            <param name="generateMessage">The delegate to generate a message.</param>
-            <remarks></remarks>
-        </member>
-        <member name="M:Umbraco.Core.Logging.LogHelper.Info(System.Type,System.Func{System.String})">
-            <summary>
-            Traces if tracing is enabled.
-            </summary>
-            <param name="callingType"></param>
-            <param name="generateMessage"></param>
-        </member>
-        <member name="M:Umbraco.Core.Logging.LogHelper.Info(System.Type,System.String,System.Func{System.Object}[])">
-            <summary>
-            Traces if tracing is enabled.
-            </summary>
-            <param name="type">The type for the logging namespace.</param>
-            <param name="generateMessageFormat">The message format.</param>
-            <param name="formatItems">The format items.</param>
-        </member>
-        <member name="M:Umbraco.Core.Logging.LogHelper.Info``1(System.String,System.Func{System.Object}[])">
-            <summary>
-            Traces a message, only generating the message if tracing is actually enabled. Use this method to avoid calling any long-running methods such as "ToDebugString" if logging is disabled.
-            </summary>
-            <typeparam name="T"></typeparam>
-            <param name="generateMessageFormat">The generate message format.</param>
-            <param name="formatItems">The format items.</param>
-            <remarks></remarks>
-        </member>
-        <member name="M:Umbraco.Core.Logging.LogHelper.Debug``1(System.Func{System.String})">
-            <summary>
-            Debugs a message, only generating the message if tracing is actually enabled. Use this method to avoid calling any long-running methods such as "ToDebugString" if logging is disabled.
-            </summary>
-            <typeparam name="T"></typeparam>
-            <param name="generateMessage">The delegate to generate a message.</param>
-            <remarks></remarks>
-        </member>
-        <member name="M:Umbraco.Core.Logging.LogHelper.Debug(System.Type,System.Func{System.String})">
-            <summary>
-            Debugs if tracing is enabled.
-            </summary>
-            <param name="callingType"></param>
-            <param name="generateMessage"></param>
-        </member>
-        <member name="M:Umbraco.Core.Logging.LogHelper.Debug(System.Type,System.String,System.Func{System.Object}[])">
-            <summary>
-            Debugs if tracing is enabled.
-            </summary>
-            <param name="type">The type for the logging namespace.</param>
-            <param name="generateMessageFormat">The message format.</param>
-            <param name="formatItems">The format items.</param>
-        </member>
-        <member name="M:Umbraco.Core.Logging.LogHelper.Debug``1(System.String,System.Func{System.Object}[])">
-            <summary>
-            Debugs a message, only generating the message if debug is actually enabled. Use this method to avoid calling any long-running methods such as "ToDebugString" if logging is disabled.
-            </summary>
-            <typeparam name="T"></typeparam>
-            <param name="generateMessageFormat">The generate message format.</param>
-            <param name="formatItems">The format items.</param>
-            <remarks></remarks>
-        </member>
-        <member name="M:Umbraco.Core.Logging.LogHelper.Debug``1(System.String,System.Boolean,System.Func{System.Object}[])">
-            <summary>
-            Debugs a message and also writes to the TraceContext specified, useful for when you would like the debug
-            output also displayed in the Http trace output.
-            </summary>
-            <typeparam name="T"></typeparam>
-            <param name="generateMessageFormat"></param>
-            <param name="showHttpTrace"></param>
-            <param name="formatItems"></param>
         </member>
         <member name="T:Umbraco.Core.MainDom">
             <summary>
@@ -17283,7 +17346,7 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:Umbraco.Core.Persistence.Repositories.IContentRepository.CountPublished">
+        <member name="M:Umbraco.Core.Persistence.Repositories.IContentRepository.CountPublished(System.String)">
             <summary>
             Get the count of published items
             </summary>
@@ -22176,6 +22239,33 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="M:Umbraco.Core.Security.BackOfficeSignInManager.TwoFactorSignInAsync(System.String,System.String,System.Boolean,System.Boolean)">
+            <summary>
+            Two factor verification step
+            </summary>
+            <param name="provider"></param>
+            <param name="code"></param>
+            <param name="isPersistent"></param>
+            <param name="rememberBrowser"></param>
+            <returns></returns>
+            <remarks>
+            This is implemented because we cannot override GetVerifiedUserIdAsync and instead we have to shadow it
+            so due to this and because we are using an INT as the TKey and not an object, it can never be null. Adding to that
+            the default(int) value returned by the base class is always a valid user (i.e. the admin) so we just have to duplicate
+            all of this code to check for -1 instead.
+            </remarks>
+        </member>
+        <member name="M:Umbraco.Core.Security.BackOfficeSignInManager.SendTwoFactorCodeAsync(System.String)">
+            <summary>Send a two factor code to a user</summary>
+            <param name="provider"></param>
+            <returns></returns>
+            <remarks>
+            This is implemented because we cannot override GetVerifiedUserIdAsync and instead we have to shadow it
+            so due to this and because we are using an INT as the TKey and not an object, it can never be null. Adding to that
+            the default(int) value returned by the base class is always a valid user (i.e. the admin) so we just have to duplicate
+            all of this code to check for -1 instead.
+            </remarks>
+        </member>
         <member name="T:Umbraco.Core.Security.BackOfficeUserManager">
             <summary>
             Default back office user manager
@@ -24744,6 +24834,20 @@
             <param name="raiseEvents"></param>
             <returns>True if sorting succeeded, otherwise False</returns>
         </member>
+        <member name="M:Umbraco.Core.Services.ContentService.Sort(System.Int32[],System.Int32,System.Boolean)">
+            <summary>
+            Sorts a collection of <see cref="T:Umbraco.Core.Models.IContent"/> objects by updating the SortOrder according
+            to the ordering of node Ids passed in.
+            </summary>
+            <remarks>
+            Using this method will ensure that the Published-state is maintained upon sorting
+            so the cache is updated accordingly - as needed.
+            </remarks>
+            <param name="ids"></param>
+            <param name="userId"></param>
+            <param name="raiseEvents"></param>
+            <returns>True if sorting succeeded, otherwise False</returns>
+        </member>
         <member name="M:Umbraco.Core.Services.ContentService.GetPagedXmlEntries(System.String,System.Int64,System.Int32,System.Int64@)">
             <summary>
             Gets paged content descendants as XML by path
@@ -26783,6 +26887,20 @@
             so the cache is updated accordingly - as needed.
             </remarks>
             <param name="items"></param>
+            <param name="userId"></param>
+            <param name="raiseEvents"></param>
+            <returns>True if sorting succeeded, otherwise False</returns>
+        </member>
+        <member name="M:Umbraco.Core.Services.IContentService.Sort(System.Int32[],System.Int32,System.Boolean)">
+            <summary>
+            Sorts a collection of <see cref="T:Umbraco.Core.Models.IContent"/> objects by updating the SortOrder according
+            to the ordering of node Ids passed in.
+            </summary>
+            <remarks>
+            Using this method will ensure that the Published-state is maintained upon sorting
+            so the cache is updated accordingly - as needed.
+            </remarks>
+            <param name="ids"></param>
             <param name="userId"></param>
             <param name="raiseEvents"></param>
             <returns>True if sorting succeeded, otherwise False</returns>
@@ -32639,9 +32757,9 @@
         </member>
         <member name="M:Umbraco.Core.Services.UserService.Delete(Umbraco.Core.Models.Membership.IUser)">
             <summary>
-            Deletes an <see cref="T:Umbraco.Core.Models.Membership.IUser"/>
+            Disables an <see cref="T:Umbraco.Core.Models.Membership.IUser"/>
             </summary>
-            <param name="membershipUser"><see cref="T:Umbraco.Core.Models.Membership.IUser"/> to Delete</param>
+            <param name="membershipUser"><see cref="T:Umbraco.Core.Models.Membership.IUser"/> to disable</param>
         </member>
         <member name="M:Umbraco.Core.Services.UserService.Delete(Umbraco.Core.Models.Membership.IUser,System.Boolean)">
             <summary>
@@ -33944,7 +34062,7 @@
             Cleans a string.
             </summary>
             <param name="text">The text to clean.</param>
-            <param name="stringType">A flag indicating the target casing and encoding of the string. By default, 
+            <param name="stringType">A flag indicating the target casing and encoding of the string. By default,
             strings are cleaned up to camelCase and Ascii.</param>
             <returns>The clean string.</returns>
             <remarks>The string is cleaned in the context of the default culture.</remarks>
@@ -33954,7 +34072,7 @@
             Cleans a string, using a specified separator.
             </summary>
             <param name="text">The text to clean.</param>
-            <param name="stringType">A flag indicating the target casing and encoding of the string. By default, 
+            <param name="stringType">A flag indicating the target casing and encoding of the string. By default,
             strings are cleaned up to camelCase and Ascii.</param>
             <param name="separator">The separator.</param>
             <returns>The clean string.</returns>
@@ -33965,7 +34083,7 @@
             Cleans a string in the context of a specified culture.
             </summary>
             <param name="text">The text to clean.</param>
-            <param name="stringType">A flag indicating the target casing and encoding of the string. By default, 
+            <param name="stringType">A flag indicating the target casing and encoding of the string. By default,
             strings are cleaned up to camelCase and Ascii.</param>
             <param name="culture">The culture.</param>
             <returns>The clean string.</returns>
@@ -33975,7 +34093,7 @@
             Cleans a string in the context of a specified culture, using a specified separator.
             </summary>
             <param name="text">The text to clean.</param>
-            <param name="stringType">A flag indicating the target casing and encoding of the string. By default, 
+            <param name="stringType">A flag indicating the target casing and encoding of the string. By default,
             strings are cleaned up to camelCase and Ascii.</param>
             <param name="separator">The separator.</param>
             <param name="culture">The culture.</param>
@@ -35632,18 +35750,18 @@
             </summary>
         </member>
         <member name="M:Umbraco.Core.ObjectExtensions.AsEnumerableOfOne``1(``0)">
-            <summary>
+             <summary>
             
-            </summary>
-            <param name="input"></param>
-            <typeparam name="T"></typeparam>
-            <returns></returns>
+             </summary>
+             <param name="input"></param>
+             <typeparam name="T"></typeparam>
+             <returns></returns>
         </member>
         <member name="M:Umbraco.Core.ObjectExtensions.DisposeIfDisposable(System.Object)">
-            <summary>
+             <summary>
             
-            </summary>
-            <param name="input"></param>
+             </summary>
+             <param name="input"></param>
         </member>
         <member name="M:Umbraco.Core.ObjectExtensions.SafeCast``1(System.Object)">
             <summary>
@@ -35656,20 +35774,30 @@
         </member>
         <member name="M:Umbraco.Core.ObjectExtensions.TryConvertTo``1(System.Object)">
             <summary>
-            Tries to convert the input object to the output type using TypeConverters
+            Attempts to convert the input object to the output type.
             </summary>
-            <typeparam name="T"></typeparam>
-            <param name="input"></param>
-            <returns></returns>
+            <remarks>This code is an optimized version of the original Umbraco method</remarks>
+            <typeparam name="T">The type to convert to</typeparam>
+            <param name="input">The input.</param>
+            <returns>The <see cref="T:Umbraco.Core.Attempt`1"/></returns>
         </member>
         <member name="M:Umbraco.Core.ObjectExtensions.TryConvertTo(System.Object,System.Type)">
             <summary>
-            Tries to convert the input object to the output type using TypeConverters. If the destination
-            type is a superclass of the input type, if will use <see cref="M:System.Convert.ChangeType(System.Object,System.Type)"/>.
+            Attempts to convert the input object to the output type.
             </summary>
+            <remarks>This code is an optimized version of the original Umbraco method</remarks>
             <param name="input">The input.</param>
-            <param name="destinationType">Type of the destination.</param>
-            <returns></returns>
+            <param name="target">The type to convert to</param>
+            <returns>The <see cref="T:Umbraco.Core.Attempt`1"/></returns>
+        </member>
+        <member name="M:Umbraco.Core.ObjectExtensions.TryConvertToFromString(System.String,System.Type)">
+            <summary>
+            Attempts to convert the input string to the output type.
+            </summary>
+            <remarks>This code is an optimized version of the original Umbraco method</remarks>
+            <param name="input">The input.</param>
+            <param name="target">The type to convert to</param>
+            <returns>The <see cref="T:System.Nullable`1"/></returns>
         </member>
         <member name="M:Umbraco.Core.ObjectExtensions.ToDictionary``3(``0,System.Linq.Expressions.Expression{System.Func{``0,``1}}[])">
             <summary>

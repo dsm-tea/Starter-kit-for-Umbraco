@@ -298,6 +298,9 @@
         var groupIndex = -1;
         var itemIndex = -1;
         $scope.selectedItem = undefined;
+        $scope.clearSearch = function () {
+            $scope.searchTerm = null;
+        };
         function iterateResults(up) {
             //default group
             if (!group) {
@@ -901,6 +904,10 @@
             acceptedFileTypes: mediaHelper.formatFileTypes(Umbraco.Sys.ServerVariables.umbracoSettings.imageFileTypes),
             uploaded: false
         };
+        $scope.togglePassword = function () {
+            var elem = $('form[name=\'loginForm\'] input[name=\'password\']');
+            elem.attr('type', elem.attr('type') === 'text' ? 'password' : 'text');
+        };
         function init() {
             // Check if it is a new user
             var inviteVal = $location.search().invite;
@@ -1092,7 +1099,7 @@
         };
         $scope.loginSubmit = function (login, password) {
             //TODO: Do validation properly like in the invite password update
-            //if the login and password are not empty we need to automatically 
+            //if the login and password are not empty we need to automatically
             // validate them - this is because if there are validation errors on the server
             // then the user has to change both username & password to resubmit which isn't ideal,
             // so if they're not empty, we'll just make sure to set them to valid.
@@ -1118,7 +1125,7 @@
                 }
             });
             //setup a watch for both of the model values changing, if they change
-            // while the form is invalid, then revalidate them so that the form can 
+            // while the form is invalid, then revalidate them so that the form can
             // be submitted again.
             $scope.loginForm.username.$viewChangeListeners.push(function () {
                 if ($scope.loginForm.username.$invalid) {
@@ -9724,19 +9731,25 @@
         angular.module('umbraco').controller('Umbraco.Editors.PartialViews.EditController', PartialViewsEditController);
     }());
     function imageFilePickerController($scope) {
-        $scope.pick = function () {
-            $scope.mediaPickerDialog = {};
-            $scope.mediaPickerDialog.view = 'mediapicker';
-            $scope.mediaPickerDialog.show = true;
-            $scope.mediaPickerDialog.submit = function (model) {
-                $scope.model.value = model.selectedImages[0].image;
-                $scope.mediaPickerDialog.show = false;
-                $scope.mediaPickerDialog = null;
+        $scope.add = function () {
+            $scope.mediaPickerOverlay = {
+                view: 'mediapicker',
+                disableFolderSelect: true,
+                onlyImages: true,
+                show: true,
+                submit: function (model) {
+                    $scope.model.value = model.selectedImages[0].image;
+                    $scope.mediaPickerOverlay.show = false;
+                    $scope.mediaPickerOverlay = null;
+                },
+                close: function () {
+                    $scope.mediaPickerOverlay.show = false;
+                    $scope.mediaPickerOverlay = null;
+                }
             };
-            $scope.mediaPickerDialog.close = function (oldModel) {
-                $scope.mediaPickerDialog.show = false;
-                $scope.mediaPickerDialog = null;
-            };
+        };
+        $scope.remove = function () {
+            $scope.model.value = null;
         };
     }
     angular.module('umbraco').controller('Umbraco.PrevalueEditors.ImageFilePickerController', imageFilePickerController);
@@ -10215,36 +10228,124 @@
         };
     });
     function ColorPickerController($scope) {
-        $scope.toggleItem = function (color) {
-            if ($scope.model.value == color) {
-                $scope.model.value = '';
-                //this is required to re-validate
-                $scope.propertyForm.modelValue.$setViewValue($scope.model.value);
-            } else {
-                $scope.model.value = color;
-                //this is required to re-validate
-                $scope.propertyForm.modelValue.$setViewValue($scope.model.value);
+        $scope.isConfigured = $scope.model.config && $scope.model.config.items && _.keys($scope.model.config.items).length > 0;
+        if ($scope.isConfigured) {
+            for (var key in $scope.model.config.items) {
+                if (!$scope.model.config.items[key].hasOwnProperty('value'))
+                    $scope.model.config.items[key] = {
+                        value: $scope.model.config.items[key],
+                        label: $scope.model.config.items[key]
+                    };
             }
+            $scope.model.useLabel = isTrue($scope.model.config.useLabel);
+            initActiveColor();
+        }
+        $scope.toggleItem = function (color) {
+            var currentColor = $scope.model.value && $scope.model.value.hasOwnProperty('value') ? $scope.model.value.value : $scope.model.value;
+            var newColor;
+            if (currentColor === color.value) {
+                // deselect
+                $scope.model.value = $scope.model.useLabel ? {
+                    value: '',
+                    label: ''
+                } : '';
+                newColor = '';
+            } else {
+                // select
+                $scope.model.value = $scope.model.useLabel ? {
+                    value: color.value,
+                    label: color.label
+                } : color.value;
+                newColor = color.value;
+            }
+            // this is required to re-validate
+            $scope.propertyForm.modelValue.$setViewValue(newColor);
         };
         // Method required by the valPropertyValidator directive (returns true if the property editor has at least one color selected)
         $scope.validateMandatory = function () {
+            var isValid = !$scope.model.validation.mandatory || $scope.model.value != null && $scope.model.value != '' && (!$scope.model.value.hasOwnProperty('value') || $scope.model.value.value !== '');
             return {
-                isValid: !$scope.model.validation.mandatory || $scope.model.value != null && $scope.model.value != '',
+                isValid: isValid,
                 errorMsg: 'Value cannot be empty',
                 errorKey: 'required'
             };
         };
         $scope.isConfigured = $scope.model.config && $scope.model.config.items && _.keys($scope.model.config.items).length > 0;
+        // A color is active if it matches the value and label of the model.
+        // If the model doesn't store the label, ignore the label during the comparison.
+        $scope.isActiveColor = function (color) {
+            // no value
+            if (!$scope.model.value)
+                return false;
+            // Complex color (value and label)?
+            if (!$scope.model.value.hasOwnProperty('value'))
+                return $scope.model.value === color.value;
+            return $scope.model.value.value === color.value && $scope.model.value.label === color.label;
+        };
+        // Finds the color best matching the model's color,
+        // and sets the model color to that one. This is useful when
+        // either the value or label was changed on the data type.
+        function initActiveColor() {
+            // no value
+            if (!$scope.model.value)
+                return;
+            // Complex color (value and label)?
+            if (!$scope.model.value.hasOwnProperty('value'))
+                return;
+            var modelColor = $scope.model.value.value;
+            var modelLabel = $scope.model.value.label;
+            // Check for a full match or partial match.
+            var foundItem = null;
+            // Look for a fully matching color.
+            for (var key in $scope.model.config.items) {
+                var item = $scope.model.config.items[key];
+                if (item.value == modelColor && item.label == modelLabel) {
+                    foundItem = item;
+                    break;
+                }
+            }
+            // Look for a color with a matching value.
+            if (!foundItem) {
+                for (var key in $scope.model.config.items) {
+                    var item = $scope.model.config.items[key];
+                    if (item.value == modelColor) {
+                        foundItem = item;
+                        break;
+                    }
+                }
+            }
+            // Look for a color with a matching label.
+            if (!foundItem) {
+                for (var key in $scope.model.config.items) {
+                    var item = $scope.model.config.items[key];
+                    if (item.label == modelLabel) {
+                        foundItem = item;
+                        break;
+                    }
+                }
+            }
+            // If a match was found, set it as the active color.
+            if (foundItem) {
+                $scope.model.value.value = foundItem.value;
+                $scope.model.value.label = foundItem.label;
+            }
+        }
+        // figures out if a value is trueish enough
+        function isTrue(bool) {
+            return !!bool && bool !== '0' && angular.lowercase(bool) !== 'false';
+        }
     }
     angular.module('umbraco').controller('Umbraco.PropertyEditors.ColorPickerController', ColorPickerController);
     angular.module('umbraco').controller('Umbraco.PrevalueEditors.MultiColorPickerController', function ($scope, $timeout, assetsService, angularHelper, $element) {
         //NOTE: We need to make each color an object, not just a string because you cannot 2-way bind to a primitive.
         var defaultColor = '000000';
+        var defaultLabel = null;
         $scope.newColor = defaultColor;
+        $scope.newLavel = defaultLabel;
         $scope.hasError = false;
         assetsService.load([//"lib/spectrum/tinycolor.js",
             'lib/spectrum/spectrum.js'], $scope).then(function () {
-            var elem = $element.find('input');
+            var elem = $element.find('input[name=\'newColor\']');
             elem.spectrum({
                 color: null,
                 showInitial: false,
@@ -10274,32 +10375,50 @@
             //make an array from the dictionary
             var items = [];
             for (var i in $scope.model.value) {
-                items.push({
-                    value: $scope.model.value[i],
-                    id: i
-                });
+                var oldValue = $scope.model.value[i];
+                if (oldValue.hasOwnProperty('value')) {
+                    items.push({
+                        value: oldValue.value,
+                        label: oldValue.label,
+                        id: i
+                    });
+                } else {
+                    items.push({
+                        value: oldValue,
+                        label: oldValue,
+                        id: i
+                    });
+                }
             }
             //now make the editor model the array
             $scope.model.value = items;
         }
+        // ensure labels
+        for (var i = 0; i < $scope.model.value.length; i++) {
+            var item = $scope.model.value[i];
+            item.label = item.hasOwnProperty('label') ? item.label : item.value;
+        }
+        function validLabel(label) {
+            return label !== null && typeof label !== 'undefined' && label !== '' && label.length && label.length > 0;
+        }
         $scope.remove = function (item, evt) {
             evt.preventDefault();
             $scope.model.value = _.reject($scope.model.value, function (x) {
-                return x.value === item.value;
+                return x.value === item.value && x.label === item.label;
             });
         };
         $scope.add = function (evt) {
             evt.preventDefault();
             if ($scope.newColor) {
+                var newLabel = validLabel($scope.newLabel) ? $scope.newLabel : $scope.newColor;
                 var exists = _.find($scope.model.value, function (item) {
-                    return item.value.toUpperCase() == $scope.newColor.toUpperCase();
+                    return item.value.toUpperCase() === $scope.newColor.toUpperCase() || item.label.toUpperCase() === newLabel.toUpperCase();
                 });
                 if (!exists) {
-                    $scope.model.value.push({ value: $scope.newColor });
-                    //$scope.newColor = defaultColor;
-                    // set colorpicker to default color
-                    //var elem = $element.find("input");
-                    //elem.spectrum("set", $scope.newColor);
+                    $scope.model.value.push({
+                        value: $scope.newColor,
+                        label: newLabel
+                    });
                     $scope.hasError = false;
                     return;
                 }
@@ -11489,6 +11608,7 @@
         };
         var notIncludedRte = [];
         var cancelMove = false;
+        var startingArea;
         $scope.sortableOptionsCell = {
             distance: 10,
             cursor: 'move',
@@ -11516,8 +11636,9 @@
                 }
             },
             over: function (event, ui) {
-                var allowedEditors = $(event.target).scope().area.allowed;
-                if ($.inArray(ui.item.scope().control.editor.alias, allowedEditors) < 0 && allowedEditors) {
+                var area = $(event.target).scope().area;
+                var allowedEditors = area.allowed;
+                if ($.inArray(ui.item.scope().control.editor.alias, allowedEditors) < 0 && allowedEditors || startingArea != area && area.maxItems != '' && area.maxItems > 0 && area.maxItems < area.controls.length + 1) {
                     $scope.$apply(function () {
                         $(event.target).scope().area.dropNotAllowed = true;
                     });
@@ -11562,6 +11683,9 @@
                 currentForm.$setDirty();
             },
             start: function (e, ui) {
+                //Get the starting area for reference
+                var area = $(e.target).scope().area;
+                startingArea = area;
                 // fade out control when sorting
                 ui.item.context.style.display = 'block';
                 ui.item.context.style.opacity = '0.5';
@@ -11633,7 +11757,7 @@
         $scope.openEditorOverlay = function (event, area, index, key) {
             $scope.editorOverlay = {
                 view: 'itempicker',
-                filter: false,
+                filter: area.$allowedEditors.length > 15,
                 title: localizationService.localize('grid_insertControl'),
                 availableItems: area.$allowedEditors,
                 event: event,
@@ -11938,10 +12062,10 @@
             }
             //ensure the grid has a column value set,
             //if nothing is found, set it to 12
-            if ($scope.model.config.items.columns && angular.isString($scope.model.config.items.columns)) {
-                $scope.model.config.items.columns = parseInt($scope.model.config.items.columns);
-            } else {
+            if (!$scope.model.config.items.columns) {
                 $scope.model.config.items.columns = 12;
+            } else if (angular.isString($scope.model.config.items.columns)) {
+                $scope.model.config.items.columns = parseInt($scope.model.config.items.columns);
             }
             if ($scope.model.value && $scope.model.value.sections && $scope.model.value.sections.length > 0 && $scope.model.value.sections[0].rows && $scope.model.value.sections[0].rows.length > 0) {
                 if ($scope.model.value.name && angular.isArray($scope.model.config.items.templates)) {
@@ -12101,6 +12225,13 @@
         };
         gridService.getGridEditors().then(function (response) {
             $scope.availableEditors = response.data;
+            //Localize the grid editor names
+            angular.forEach($scope.availableEditors, function (value, key) {
+                //If no translation is provided, keep using the editor name from the manifest
+                if (localizationService.dictionary.hasOwnProperty('grid_' + value.alias)) {
+                    value.name = localizationService.localize('grid_' + value.alias);
+                }
+            });
             $scope.contentReady = true;
             // *********************************************
             // Init grid
@@ -12587,12 +12718,12 @@
         });
         // Return a helper with preserved width of cells
         var fixHelper = function (e, ui) {
-            var h = ui.clone();
-            h.children().each(function () {
+            ui.children().each(function () {
                 $(this).width($(this).width());
             });
-            h.css('background-color', 'lightgray');
-            return h;
+            var row = ui.clone();
+            row.css('background-color', 'lightgray');
+            return row;
         };
         $scope.sortableOptions = {
             helper: fixHelper,
@@ -12603,6 +12734,10 @@
             cursor: 'move',
             items: '> tr',
             tolerance: 'pointer',
+            forcePlaceholderSize: true,
+            start: function (e, ui) {
+                ui.placeholder.height(ui.item.height());
+            },
             update: function (e, ui) {
                 // Get the new and old index for the moved element (using the text as the identifier)
                 var newIndex = ui.item.index();
@@ -13756,6 +13891,7 @@
         function setupViewModel() {
             $scope.images = [];
             $scope.ids = [];
+            $scope.isMultiPicker = multiPicker;
             if ($scope.model.value) {
                 var ids = $scope.model.value.split(',');
                 //NOTE: We need to use the entityResource NOT the mediaResource here because
@@ -13775,7 +13911,10 @@
                     // when there is no match for a selected id. This will ensure that the values being set on save, are the same as before.
                     medias = _.map(ids, function (id) {
                         var found = _.find(medias, function (m) {
-                            return m.udi === id || m.id === id;
+                            // We could use coercion (two ='s) here .. but not sure if this works equally well in all browsers and
+                            // it's prone to someone "fixing" it at some point without knowing the effects. Rather use toString()
+                            // compares and be completely sure it works.
+                            return m.udi.toString() === id.toString() || m.id.toString() === id.toString();
                         });
                         if (found) {
                             return found;
@@ -14664,6 +14803,9 @@
             $scope.model.value.splice(idx, 1);
         };
         $scope.add = function ($event) {
+            if (!angular.isArray($scope.model.value)) {
+                $scope.model.value = [];
+            }
             if ($scope.newCaption == '') {
                 $scope.hasError = true;
             } else {
@@ -15021,7 +15163,7 @@
                         }
                     });
                     editor.on('ObjectResized', function (e) {
-                        var qs = '?width=' + e.width + '&height=' + e.height;
+                        var qs = '?width=' + e.width + '&height=' + e.height + '&mode=max';
                         var srcAttr = $(e.target).attr('src');
                         var path = srcAttr.split('?')[0];
                         $(e.target).attr('data-mce-src', path + qs);
@@ -15115,6 +15257,9 @@
                 // element might still be there even after the modal has been hidden.
                 $scope.$on('$destroy', function () {
                     unsubscribe();
+                    if (tinyMceEditor !== undefined && tinyMceEditor != null) {
+                        tinyMceEditor.destroy();
+                    }
                 });
             });
         });
@@ -15617,17 +15762,22 @@
     angular.module('umbraco').controller('Umbraco.PropertyEditors.textAreaController', textAreaController);
     function textboxController($scope) {
         // macro parameter editor doesn't contains a config object,
-        // so we create a new one to hold any properties 
+        // so we create a new one to hold any properties
         if (!$scope.model.config) {
             $scope.model.config = {};
-        }
-        if (!$scope.model.config.maxChars) {
-            $scope.model.config.maxChars = false;
         }
         $scope.model.maxlength = false;
         if ($scope.model.config && $scope.model.config.maxChars) {
             $scope.model.maxlength = true;
-            if ($scope.model.value == undefined) {
+        }
+        if (!$scope.model.config.maxChars) {
+            // 500 is the maximum number that can be stored
+            // in the database, so set it to the max, even
+            // if no max is specified in the config
+            $scope.model.config.maxChars = 500;
+        }
+        if ($scope.model.maxlength) {
+            if ($scope.model.value === undefined) {
                 $scope.model.count = $scope.model.config.maxChars * 1;
             } else {
                 $scope.model.count = $scope.model.config.maxChars * 1 - $scope.model.value.length;
@@ -15635,7 +15785,7 @@
         }
         $scope.model.change = function () {
             if ($scope.model.config && $scope.model.config.maxChars) {
-                if ($scope.model.value == undefined) {
+                if ($scope.model.value === undefined) {
                     $scope.model.count = $scope.model.config.maxChars * 1;
                 } else {
                     $scope.model.count = $scope.model.config.maxChars * 1 - $scope.model.value.length;
@@ -17294,7 +17444,7 @@
     }());
     (function () {
         'use strict';
-        function UsersController($scope, $timeout, $location, usersResource, userGroupsResource, userService, localizationService, contentEditingHelper, usersHelper, formHelper, notificationsService, dateHelper) {
+        function UsersController($scope, $timeout, $location, $routeParams, usersResource, userGroupsResource, userService, localizationService, contentEditingHelper, usersHelper, formHelper, notificationsService, dateHelper) {
             var vm = this;
             var localizeSaving = localizationService.localize('general_saving');
             vm.page = {};
@@ -17420,6 +17570,11 @@
             function init() {
                 vm.usersOptions.orderBy = 'Name';
                 vm.usersOptions.orderDirection = 'Ascending';
+                if ($routeParams.create) {
+                    setUsersViewState('createUser');
+                } else if ($routeParams.invite) {
+                    setUsersViewState('inviteUser');
+                }
                 // Get users
                 getUsers();
                 // Get user groups
@@ -17457,6 +17612,14 @@
             function setUsersViewState(state) {
                 if (state === 'createUser') {
                     clearAddUserForm();
+                    $location.search('create', 'true');
+                    $location.search('invite', null);
+                } else if (state === 'inviteUser') {
+                    $location.search('create', null);
+                    $location.search('invite', 'true');
+                } else if (state === 'overview') {
+                    $location.search('create', null);
+                    $location.search('invite', null);
                 }
                 vm.usersViewState = state;
             }
