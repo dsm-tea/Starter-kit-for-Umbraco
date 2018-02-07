@@ -2620,6 +2620,44 @@
             <param name="media">Specifies the already resolved content item to check against, setting this ignores the nodeId</param>
             <returns></returns>
         </member>
+        <member name="T:Umbraco.Web.ExamineStartup">
+            <summary>
+            Used to configure Examine during startup for the web application
+            </summary>
+        </member>
+        <member name="M:Umbraco.Web.ExamineStartup.Initialize">
+            <summary>
+            Called during the initialize operation of the boot manager process
+            </summary>
+        </member>
+        <member name="M:Umbraco.Web.ExamineStartup.Complete">
+            <summary>
+            Called during the Complete operation of the boot manager process
+            </summary>
+        </member>
+        <member name="M:Umbraco.Web.ExamineStartup.RebuildIndexes">
+            <summary>
+            Called to perform the rebuilding indexes on startup if the indexes don't exist
+            </summary>
+        </member>
+        <member name="M:Umbraco.Web.ExamineStartup.GetIndexesForColdBoot">
+            <summary>
+            The method used to create indexes on a cold boot
+            </summary>
+            <remarks>
+            A cold boot is when the server determines it will not (or cannot) process instructions in the cache table and
+            will rebuild it's own caches itself.
+            </remarks>
+        </member>
+        <member name="M:Umbraco.Web.ExamineStartup.EnsureUnlockedAndConfigured">
+            <summary>
+            Must be called to configure each index and ensure it's unlocked before any indexing occurs
+            </summary>
+            <remarks>
+            Indexing rebuilding can occur on a normal boot if the indexes are empty or on a cold boot by the database server messenger. Before
+            either of these happens, we need to configure the indexes.
+            </remarks>
+        </member>
         <member name="P:Umbraco.Web.HealthCheck.Checks.Config.AbstractConfigCheck.FilePath">
             <summary>
             Gets the config file path.
@@ -7696,16 +7734,6 @@
             The <see cref="T:System.Object"/>.
             </returns>
         </member>
-        <member name="M:Umbraco.Web.PropertyEditors.ValueConverters.MultiNodeTreePickerPropertyConverter.GetPublishedContent``1(``0,Umbraco.Core.Models.UmbracoObjectTypes@,Umbraco.Core.Models.UmbracoObjectTypes,System.Func{``0,Umbraco.Core.Models.IPublishedContent})">
-            <summary>
-            Attempt to get an IPublishedContent instance based on ID and content type
-            </summary>
-            <param name="nodeId">The content node ID</param>
-            <param name="actualType">The type of content being requested</param>
-            <param name="expectedType">The type of content expected/supported by <paramref name="contentFetcher"/></param>
-            <param name="contentFetcher">A function to fetch content of type <paramref name="expectedType"/></param>
-            <returns>The requested content, or null if either it does not exist or <paramref name="actualType"/> does not match <paramref name="expectedType"/></returns>
-        </member>
         <member name="T:Umbraco.Web.PropertyEditors.ValueConverters.LegacyMediaPickerPropertyConverter">
             <summary>
             The multiple media picker and double legacy media picker property value converter, should be deleted for v8
@@ -11944,7 +11972,7 @@
         </member>
         <member name="M:Umbraco.Web.Trees.ContentTreeControllerBase.GetSingleTreeNodeWithAccessCheck(Umbraco.Core.Models.EntityBase.IUmbracoEntity,System.String,System.Net.Http.Formatting.FormDataCollection)">
             <summary>
-            Returns a <see cref="T:Umbraco.Web.Models.Trees.TreeNode"/> for the <see cref="T:Umbraco.Core.Models.EntityBase.IUmbracoEntity"/> and 
+            Returns a <see cref="T:Umbraco.Web.Models.Trees.TreeNode"/> for the <see cref="T:Umbraco.Core.Models.EntityBase.IUmbracoEntity"/> and
             attaches some meta data to the node if the user doesn't have start node access to it when in dialog mode
             </summary>
             <param name="e"></param>
@@ -11954,7 +11982,7 @@
         </member>
         <member name="P:Umbraco.Web.Trees.ContentTreeControllerBase.RecycleBinId">
             <summary>
-            Returns the 
+            Returns the
             </summary>
         </member>
         <member name="P:Umbraco.Web.Trees.ContentTreeControllerBase.RecycleBinSmells">
@@ -12028,7 +12056,7 @@
             <param name="doc">The Document to check permissions against</param>
             <param name="allowedUserOptions">A list of MenuItems that the user has permissions to execute on the current document</param>
             <remarks>By default the user must have Browse permissions to see the node in the Content tree</remarks>
-            <returns></returns>        
+            <returns></returns>
         </member>
         <member name="M:Umbraco.Web.Trees.ContentTreeControllerBase.GetIdentifierFromString(System.String)">
             <summary>
@@ -18330,6 +18358,7 @@
             <remarks>
             A cold boot is when the server determines it will not (or cannot) process instructions in the cache table and
             will rebuild it's own caches itself.
+            TODO: Does this method need to exist? Is it used publicly elsewhere (i.e. outside of core?)
             </remarks>
         </member>
         <member name="T:Umbraco.Web.PluginManagerExtensions">
