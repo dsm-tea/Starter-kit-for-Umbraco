@@ -158,6 +158,16 @@
             Resets the url.
             </summary>
         </member>
+        <member name="M:Umbraco.Core.ApplicationContext.CurrentVersion">
+            <summary>
+            Gets the Current Version of the Umbraco Site before an upgrade
+            by using the last/most recent Umbraco Migration that has been run
+            </summary>
+            <returns>A SemVersion of the latest Umbraco DB Migration run</returns>
+            <remarks>
+            NOTE: This existed in the InstallHelper previously but should really be here so it can be re-used if necessary
+            </remarks>
+        </member>
         <member name="P:Umbraco.Core.ApplicationContext.DatabaseContext">
             <summary>
             Gets the current DatabaseContext
@@ -1433,6 +1443,24 @@
             When set, DeepClone will always clone all items
             </summary>
         </member>
+        <member name="T:Umbraco.Core.Collections.TypeList`1">
+            <summary>
+            Represents a list of types.
+            </summary>
+            <remarks>Types in the list are, or derive from, or implement, the base type.</remarks>
+            <typeparam name="TBase">The base type.</typeparam>
+        </member>
+        <member name="M:Umbraco.Core.Collections.TypeList`1.Add``1">
+            <summary>
+            Adds a type to the list.
+            </summary>
+            <typeparam name="T">The type to add.</typeparam>
+        </member>
+        <member name="M:Umbraco.Core.Collections.TypeList`1.Contains(System.Type)">
+            <summary>
+            Determines whether a type is in the list.
+            </summary>
+        </member>
         <member name="T:Umbraco.Core.Collections.CompositeTypeTypeKey">
             <summary>
             Represents a composite key of (Type, Type) for fast dictionaries.
@@ -2366,6 +2394,11 @@
             alias for the media tree.
             </summary>
         </member>
+        <member name="F:Umbraco.Core.Constants.Trees.Macros">
+            <summary>
+            alias for the macro tree.
+            </summary>
+        </member>
         <member name="F:Umbraco.Core.Constants.Trees.DataTypes">
             <summary>
             alias for the datatype tree.
@@ -3257,15 +3290,51 @@
             The integer identifier for global system root node.
             </summary>
         </member>
+        <member name="F:Umbraco.Core.Constants.System.RootString">
+            <summary>
+            The string identifier for global system root node.
+            </summary>
+            <remarks>Use this instead of re-creating the string everywhere.</remarks>
+        </member>
         <member name="F:Umbraco.Core.Constants.System.RecycleBinContent">
             <summary>
             The integer identifier for content's recycle bin.
             </summary>
         </member>
+        <member name="F:Umbraco.Core.Constants.System.RecycleBinContentString">
+            <summary>
+            The string identifier for content's recycle bin.
+            </summary>
+            <remarks>Use this instead of re-creating the string everywhere.</remarks>
+        </member>
+        <member name="F:Umbraco.Core.Constants.System.RecycleBinContentPathPrefix">
+            <summary>
+            The string path prefix of the content's recycle bin.
+            </summary>
+            <remarks>
+            <para>Everything that is in the content recycle bin, has a path that starts with the prefix.</para>
+            <para>Use this instead of re-creating the string everywhere.</para>
+            </remarks>
+        </member>
         <member name="F:Umbraco.Core.Constants.System.RecycleBinMedia">
             <summary>
             The integer identifier for media's recycle bin.
             </summary>
+        </member>
+        <member name="F:Umbraco.Core.Constants.System.RecycleBinMediaString">
+            <summary>
+            The string identifier for media's recycle bin.
+            </summary>
+            <remarks>Use this instead of re-creating the string everywhere.</remarks>
+        </member>
+        <member name="F:Umbraco.Core.Constants.System.RecycleBinMediaPathPrefix">
+            <summary>
+            The string path prefix of the media's recycle bin.
+            </summary>
+            <remarks>
+            <para>Everything that is in the media recycle bin, has a path that starts with the prefix.</para>
+            <para>Use this instead of re-creating the string everywhere.</para>
+            </remarks>
         </member>
         <member name="T:Umbraco.Core.Constants.Web">
             <summary>
@@ -4139,6 +4208,11 @@
             <param name="content">The content item.</param>
             <param name="alias">The property alias.</param>
             <param name="value">The deploy property value.</param>
+        </member>
+        <member name="T:Umbraco.Core.DisposableObjectSlim">
+            <summary>
+            This should not be use if there are ubmanaged resources to be disposed, use DisposableObject instead
+            </summary>
         </member>
         <member name="T:Umbraco.Core.EmailSender">
             <summary>
@@ -5997,6 +6071,11 @@
             Will hold the media file system relative path of the users custom avatar if they uploaded one
             </summary>
         </member>
+        <member name="P:Umbraco.Core.Models.Membership.IUser.TourData">
+            <summary>
+            A Json blob stored for recording tour data for a user
+            </summary>
+        </member>
         <member name="T:Umbraco.Core.Models.Membership.User">
             <summary>
             Represents a backoffice user
@@ -6037,6 +6116,11 @@
         <member name="P:Umbraco.Core.Models.Membership.User.SecurityStamp">
             <summary>
             The security stamp used by ASP.Net identity
+            </summary>
+        </member>
+        <member name="P:Umbraco.Core.Models.Membership.User.TourData">
+            <summary>
+            A Json blob stored for recording tour data for a user
             </summary>
         </member>
         <member name="P:Umbraco.Core.Models.Membership.User.SessionTimeout">
@@ -6473,6 +6557,30 @@
             <para>Use nested published property type when creating detached properties within a published content.</para>
             </remarks>
         </member>
+        <member name="P:Umbraco.Core.Models.Rdbms.UserLoginDto.LoggedInUtc">
+            <summary>
+            Tracks when the session is created
+            </summary>
+        </member>
+        <member name="P:Umbraco.Core.Models.Rdbms.UserLoginDto.LastValidatedUtc">
+            <summary>
+            Updated every time a user's session is validated
+            </summary>
+            <remarks>
+            This allows us to guess if a session is timed out if a user doesn't actively log out
+            and also allows us to trim the data in the table
+            </remarks>
+        </member>
+        <member name="P:Umbraco.Core.Models.Rdbms.UserLoginDto.LoggedOutUtc">
+            <summary>
+            Tracks when the session is removed when the user's account is logged out
+            </summary>
+        </member>
+        <member name="P:Umbraco.Core.Models.Rdbms.UserLoginDto.IpAddress">
+            <summary>
+            Logs the IP address of the session if available
+            </summary>
+        </member>
         <member name="P:Umbraco.Core.Models.Rdbms.UserGroupDto.UserCount">
             <summary>
             This is only relevant when this column is included in the results (i.e. GetUserGroupsWithUserCounts)
@@ -6493,6 +6601,11 @@
             Will hold the media file system relative path of the users custom avatar if they uploaded one
             </summary>
         </member>
+        <member name="P:Umbraco.Core.Models.Rdbms.UserDto.TourData">
+            <summary>
+            A Json blob stored for recording tour data for a user
+            </summary>
+        </member>
         <member name="T:Umbraco.Core.Models.UserControl">
             <summary>
             Represents a UserControl file
@@ -6510,6 +6623,15 @@
             <summary>
             A model representing the value saved for the grid
             </summary>
+        </member>
+        <member name="M:Umbraco.Core.Models.AuditItem.#ctor(System.Int32,System.String,Umbraco.Core.Models.AuditType,System.Int32)">
+            <summary>
+            Constructor for creating an item to be created
+            </summary>
+            <param name="objectId"></param>
+            <param name="comment"></param>
+            <param name="type"></param>
+            <param name="userId"></param>
         </member>
         <member name="T:Umbraco.Core.Models.AuditType">
             <summary>
@@ -10003,12 +10125,11 @@
             <param name="umbracoObjectType">UmbracoObjectTypes value</param>
             <returns>a string of the FriendlyName</returns>
         </member>
-        <member name="M:Umbraco.Core.Models.UserExtensions.GetCurrentUserAvatarUrls(Umbraco.Core.Models.Membership.IUser,Umbraco.Core.Services.IUserService,Umbraco.Core.Cache.ICacheProvider)">
+        <member name="M:Umbraco.Core.Models.UserExtensions.GetUserAvatarUrls(Umbraco.Core.Models.Membership.IUser,Umbraco.Core.Cache.ICacheProvider)">
             <summary>
             Tries to lookup the user's gravatar to see if the endpoint can be reached, if so it returns the valid URL
             </summary>
             <param name="user"></param>
-            <param name="userService"></param>
             <param name="staticCache"></param>
             <returns>
             A list of 5 different sized avatar URLs
@@ -15458,6 +15579,14 @@
             </param>
             <returns></returns>
         </member>
+        <member name="M:Umbraco.Core.Persistence.Factories.MediaFactory.TryMatch(System.String,System.String@)">
+            <summary>
+            Try getting a media path out of the string being stored for media
+            </summary>
+            <param name="text"></param>
+            <param name="mediaPath"></param>
+            <returns></returns>
+        </member>
         <member name="T:Umbraco.Core.Persistence.LocalDb">
             <summary>
             Manages LocalDB databases.
@@ -16522,6 +16651,26 @@
             </summary>
             <typeparam name="T"></typeparam>
         </member>
+        <member name="M:Umbraco.Core.Persistence.Repositories.AuditRepository.GetPagedResultsByQuery(Umbraco.Core.Persistence.Querying.IQuery{Umbraco.Core.Models.IAuditItem},System.Int64,System.Int32,System.Int64@,Umbraco.Core.Persistence.DatabaseModelDefinitions.Direction,Umbraco.Core.Models.AuditType[],Umbraco.Core.Persistence.Querying.IQuery{Umbraco.Core.Models.IAuditItem})">
+            <summary>
+            Return the audit items as paged result
+            </summary>
+            <param name="query">
+            The query coming from the service
+            </param>
+            <param name="pageIndex"></param>
+            <param name="pageSize"></param>
+            <param name="totalRecords"></param>
+            <param name="orderDirection"></param>
+            <param name="auditTypeFilter">
+            Since we currently do not have enum support with our expression parser, we cannot query on AuditType in the query or the custom filter
+            so we need to do that here
+            </param>
+            <param name="customFilter">
+            A user supplied custom filter
+            </param>
+            <returns></returns>
+        </member>
         <member name="F:Umbraco.Core.Persistence.Repositories.BaseQueryType.FullSingle">
             <summary>
             A query to return all information for a single item
@@ -16563,6 +16712,26 @@
             <summary>
             An internal repository for managing entity containers such as doc type, media type, data type containers.
             </summary>
+        </member>
+        <member name="M:Umbraco.Core.Persistence.Repositories.IAuditRepository.GetPagedResultsByQuery(Umbraco.Core.Persistence.Querying.IQuery{Umbraco.Core.Models.IAuditItem},System.Int64,System.Int32,System.Int64@,Umbraco.Core.Persistence.DatabaseModelDefinitions.Direction,Umbraco.Core.Models.AuditType[],Umbraco.Core.Persistence.Querying.IQuery{Umbraco.Core.Models.IAuditItem})">
+            <summary>
+            Return the audit items as paged result
+            </summary>
+            <param name="query">
+            The query coming from the service
+            </param>
+            <param name="pageIndex"></param>
+            <param name="pageSize"></param>
+            <param name="totalRecords"></param>
+            <param name="orderDirection"></param>
+            <param name="auditTypeFilter">
+            Since we currently do not have enum support with our expression parser, we cannot query on AuditType in the query or the custom filter
+            so we need to do that here
+            </param>
+            <param name="customFilter">
+            A user supplied custom filter
+            </param>
+            <returns></returns>
         </member>
         <member name="T:Umbraco.Core.Persistence.Repositories.IRedirectUrlRepository">
             <summary>
@@ -17830,6 +17999,13 @@
             TODO: This is ugly and to fix we need to decouple the IRepositoryQueryable -> IRepository -> IReadRepository which should all be separate things!
             Then we can do the same thing with repository instances and we wouldn't need to leave all these methods as not implemented because we wouldn't need to implement them
             </remarks>
+        </member>
+        <member name="M:Umbraco.Core.Persistence.Repositories.MediaRepository.GetMediaByPath(System.String)">
+            <summary>
+            Gets an <see cref="T:Umbraco.Core.Models.IMedia"/> object from the path stored in the for the media item.
+            </summary>
+            <param name="mediaPath">Path of the media item to retrieve (for example: /media/1024/koala_403x328.jpg)</param>
+            <returns><see cref="T:Umbraco.Core.Models.IMedia"/></returns>
         </member>
         <member name="M:Umbraco.Core.Persistence.Repositories.MediaRepository.GetPagedResultsByQuery(Umbraco.Core.Persistence.Querying.IQuery{Umbraco.Core.Models.IMedia},System.Int64,System.Int32,System.Int64@,System.String,Umbraco.Core.Persistence.DatabaseModelDefinitions.Direction,System.Boolean,Umbraco.Core.Persistence.Querying.IQuery{Umbraco.Core.Models.IMedia})">
             <summary>
@@ -22185,10 +22361,23 @@
         </member>
         <member name="M:Umbraco.Core.Security.BackOfficeCookieAuthenticationProvider.ValidateIdentity(Microsoft.Owin.Security.Cookies.CookieValidateIdentityContext)">
             <summary>
-            Ensures that the culture is set correctly for the current back office user
+            Ensures that the culture is set correctly for the current back office user and that the user's session token is valid
             </summary>
             <param name="context"/>
             <returns/>
+        </member>
+        <member name="M:Umbraco.Core.Security.BackOfficeCookieAuthenticationProvider.EnsureValidSessionId(Microsoft.Owin.Security.Cookies.CookieValidateIdentityContext)">
+            <summary>
+            Ensures that the user has a valid session id
+            </summary>
+            <remarks>
+            So that we are not overloading the database this throttles it's check to every minute
+            </remarks>
+        </member>
+        <member name="F:Umbraco.Core.Security.BackOfficeCookieAuthenticationProvider.UserCultures">
+            <summary>
+            Used so that we aren't creating a new CultureInfo object for every single request
+            </summary>
         </member>
         <member name="M:Umbraco.Core.Security.BackOfficeSignInManager.PasswordSignInAsync(System.String,System.String,System.Boolean,System.Boolean)">
             <summary>
@@ -22325,6 +22514,14 @@
             <param name="contentSectionConfig"></param>
             <returns></returns>
         </member>
+        <member name="M:Umbraco.Core.Security.BackOfficeUserManager`1.ValidateSessionIdAsync(System.Int32,System.String)">
+            <summary>
+            Used to validate a user's session
+            </summary>
+            <param name="userId"></param>
+            <param name="sessionId"></param>
+            <returns></returns>
+        </member>
         <member name="M:Umbraco.Core.Security.BackOfficeUserManager`1.GetDefaultPasswordHasher(Umbraco.Core.Security.MembershipProviderBase)">
             <summary>
             This will determine which password hasher to use based on what is defined in config
@@ -22436,7 +22633,7 @@
         </member>
         <member name="M:Umbraco.Core.Security.BackOfficeUserStore.DisposeResources">
             <summary>
-            Handles the disposal of resources. Derived from abstract class <see cref="T:Umbraco.Core.DisposableObject"/> which handles common required locking logic.
+            Handles the disposal of resources. Derived from abstract class <see cref="T:Umbraco.Core.DisposableObjectSlim"/> which handles common required locking logic.
             </summary>
         </member>
         <member name="M:Umbraco.Core.Security.BackOfficeUserStore.CreateAsync(Umbraco.Core.Models.Identity.BackOfficeIdentityUser)">
@@ -22713,6 +22910,13 @@
             <typeparam name="TKey"></typeparam>
             <typeparam name="TUser"></typeparam>
         </member>
+        <member name="T:Umbraco.Core.Security.IUserSessionStore`2">
+            <summary>
+            An IUserStore interface part to implement if the store supports validating user session Ids
+            </summary>
+            <typeparam name="TUser"></typeparam>
+            <typeparam name="TKey"></typeparam>
+        </member>
         <member name="T:Umbraco.Core.Security.MachineKeyGenerator">
             <summary>
             Used to generate a machine key
@@ -22739,6 +22943,13 @@
             Ensure that both the normal password validator rules are processed along with the underlying memberhsip provider rules
             </summary>
         </member>
+        <member name="M:Umbraco.Core.Security.OwinExtensions.TryGetHttpContext(Microsoft.Owin.IOwinContext)">
+            <summary>
+            Nasty little hack to get httpcontextbase from an owin context
+            </summary>
+            <param name="owinContext"></param>
+            <returns></returns>
+        </member>
         <member name="M:Umbraco.Core.Security.OwinExtensions.GetBackOfficeSignInManager(Microsoft.Owin.IOwinContext)">
             <summary>
             Gets the back office sign in manager out of OWIN
@@ -22756,6 +22967,18 @@
             This is required because to extract the user manager we need to user a custom service since owin only deals in generics and 
             developers could register their own user manager types
             </remarks> 
+        </member>
+        <member name="T:Umbraco.Core.Security.SessionIdValidator">
+            <summary>
+            Static helper class used to configure a CookieAuthenticationProvider to validate a cookie against a user's session id
+            </summary>
+            <remarks>
+            This uses another cookie to track the last checked time which is done for a few reasons:    
+            * We can't use the user's auth ticket to do thsi because we'd be re-issuing the auth ticket all of the time and it would never expire
+                plus the auth ticket size is much larger than this small value
+            * This will execute quite often (every minute per user) and in some cases there might be several requests that end up re-issuing the cookie so the cookie value should be small
+            * We want to avoid the user lookup if it's not required so that will only happen when the time diff is great enough in the cookie
+            </remarks>
         </member>
         <member name="T:Umbraco.Core.Security.UmbracoEmailMessage">
             <summary>
@@ -23397,10 +23620,15 @@
             Use this constructor to create/assign new UserData to the ticket
             </summary>
             <param name="sessionId">
-            The security stamp for the user
+            The current sessionId for the user
             </param>
         </member>
         <member name="P:Umbraco.Core.Security.UserData.SessionId">
+            <summary>
+            This is the 'sessionId' for validation
+            </summary>        
+        </member>
+        <member name="P:Umbraco.Core.Security.UserData.SecurityStamp">
             <summary>
             This is the 'security stamp' for validation
             </summary>        
@@ -23511,6 +23739,46 @@
             <param name="throwException">set to true if an exception is to be thrown if there is an error during instantiation</param>
             <returns></returns>
         </member>
+        <member name="M:Umbraco.Core.Services.AuditService.GetPagedItemsByEntity(System.Int32,System.Int64,System.Int32,System.Int64@,Umbraco.Core.Persistence.DatabaseModelDefinitions.Direction,Umbraco.Core.Models.AuditType[],Umbraco.Core.Persistence.Querying.IQuery{Umbraco.Core.Models.IAuditItem})">
+            <summary>
+            Returns paged items in the audit trail for a given entity
+            </summary>
+            <param name="entityId"></param>
+            <param name="pageIndex"></param>
+            <param name="pageSize"></param>
+            <param name="totalRecords"></param>
+            <param name="orderDirection">
+            By default this will always be ordered descending (newest first)
+            </param>
+            <param name="auditTypeFilter">
+            Since we currently do not have enum support with our expression parser, we cannot query on AuditType in the query or the custom filter
+            so we need to do that here
+            </param>
+            <param name="customFilter">
+            Optional filter to be applied
+            </param>
+            <returns></returns>
+        </member>
+        <member name="M:Umbraco.Core.Services.AuditService.GetPagedItemsByUser(System.Int32,System.Int64,System.Int32,System.Int64@,Umbraco.Core.Persistence.DatabaseModelDefinitions.Direction,Umbraco.Core.Models.AuditType[],Umbraco.Core.Persistence.Querying.IQuery{Umbraco.Core.Models.IAuditItem})">
+            <summary>
+            Returns paged items in the audit trail for a given user
+            </summary>
+            <param name="userId"></param>
+            <param name="pageIndex"></param>
+            <param name="pageSize"></param>
+            <param name="totalRecords"></param>
+            <param name="orderDirection">
+            By default this will always be ordered descending (newest first)
+            </param>
+            <param name="auditTypeFilter">
+            Since we currently do not have enum support with our expression parser, we cannot query on AuditType in the query or the custom filter
+            so we need to do that here
+            </param>
+            <param name="customFilter">
+            Optional filter to be applied
+            </param>
+            <returns></returns>
+        </member>
         <member name="M:Umbraco.Core.Services.ContentTypeServiceExtensions.GetAvailableCompositeContentTypes(Umbraco.Core.Services.IContentTypeService,Umbraco.Core.Models.IContentTypeComposition,Umbraco.Core.Models.IContentTypeComposition[],System.String[],System.String[])">
             <summary>
             Returns the available composite content types for a given content type
@@ -23598,6 +23866,46 @@
             Deletes all user logins - normally used when a member is deleted
             </summary>
             <param name="userId"></param>
+        </member>
+        <member name="M:Umbraco.Core.Services.IAuditService.GetPagedItemsByEntity(System.Int32,System.Int64,System.Int32,System.Int64@,Umbraco.Core.Persistence.DatabaseModelDefinitions.Direction,Umbraco.Core.Models.AuditType[],Umbraco.Core.Persistence.Querying.IQuery{Umbraco.Core.Models.IAuditItem})">
+            <summary>
+            Returns paged items in the audit trail for a given entity
+            </summary>
+            <param name="entityId"></param>
+            <param name="pageIndex"></param>
+            <param name="pageSize"></param>
+            <param name="totalRecords"></param>
+            <param name="orderDirection">
+            By default this will always be ordered descending (newest first)
+            </param>
+            <param name="auditTypeFilter">
+            Since we currently do not have enum support with our expression parser, we cannot query on AuditType in the query or the custom filter
+            so we need to do that here
+            </param>
+            <param name="customFilter">
+            Optional filter to be applied
+            </param>
+            <returns></returns>
+        </member>
+        <member name="M:Umbraco.Core.Services.IAuditService.GetPagedItemsByUser(System.Int32,System.Int64,System.Int32,System.Int64@,Umbraco.Core.Persistence.DatabaseModelDefinitions.Direction,Umbraco.Core.Models.AuditType[],Umbraco.Core.Persistence.Querying.IQuery{Umbraco.Core.Models.IAuditItem})">
+            <summary>
+            Returns paged items in the audit trail for a given user
+            </summary>
+            <param name="userId"></param>
+            <param name="pageIndex"></param>
+            <param name="pageSize"></param>
+            <param name="totalRecords"></param>
+            <param name="orderDirection">
+            By default this will always be ordered descending (newest first)
+            </param>
+            <param name="auditTypeFilter">
+            Since we currently do not have enum support with our expression parser, we cannot query on AuditType in the query or the custom filter
+            so we need to do that here
+            </param>
+            <param name="customFilter">
+            Optional filter to be applied
+            </param>
+            <returns></returns>
         </member>
         <member name="T:Umbraco.Core.Services.IRedirectUrlService">
             <summary>
@@ -29852,6 +30160,34 @@
             Defines the UserService, which is an easy access to operations involving <see cref="T:Umbraco.Core.Models.Membership.IProfile"/> and eventually Users.
             </summary>
         </member>
+        <member name="M:Umbraco.Core.Services.IUserService.CreateLoginSession(System.Int32,System.String)">
+            <summary>
+            Creates a database entry for starting a new login session for a user
+            </summary>
+            <param name="userId"></param>
+            <param name="requestingIpAddress"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Umbraco.Core.Services.IUserService.ValidateLoginSession(System.Int32,System.Guid)">
+            <summary>
+            Validates that a user login session is valid/current and hasn't been closed
+            </summary>
+            <param name="userId"></param>
+            <param name="sessionId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Umbraco.Core.Services.IUserService.ClearLoginSession(System.Guid)">
+            <summary>
+            Removes the session's validity
+            </summary>
+            <param name="sessionId"></param>
+        </member>
+        <member name="M:Umbraco.Core.Services.IUserService.ClearLoginSessions(System.Int32)">
+            <summary>
+            Removes all valid sessions for the user
+            </summary>
+            <param name="userId"></param>
+        </member>
         <member name="M:Umbraco.Core.Services.IUserService.GetUserStates">
             <summary>
             This is basically facets of UserStates key = state, value = count
@@ -35506,7 +35842,7 @@
         </member>
         <member name="M:Umbraco.Core.DisposableTimer.DisposeResources">
             <summary>
-            Handles the disposal of resources. Derived from abstract class <see cref="T:Umbraco.Core.DisposableObject"/> which handles common required locking logic.
+            Handles the disposal of resources. Derived from abstract class <see cref="T:Umbraco.Core.DisposableObjectSlim"/> which handles common required locking logic.
             </summary>
         </member>
         <member name="T:Umbraco.Core.ExpressionHelper">
@@ -36114,6 +36450,18 @@
             The time span to wait before considering a server stale, after it has last been accessed.
             </summary>
         </member>
+        <member name="M:Umbraco.Core.Sync.RefreshInstruction.#ctor(umbraco.interfaces.ICacheRefresher,Umbraco.Core.Sync.RefreshMethodType,System.String,System.Int32)">
+            <summary>
+            A private constructor to create a new instance
+            </summary>
+            <param name="refresher"></param>
+            <param name="refreshType"></param>
+            <param name="json"></param>
+            <param name="idCount">
+            When the refresh method is <see cref="F:Umbraco.Core.Sync.RefreshMethodType.RefreshByIds"/> we know how many Ids are being refreshed so we know the instruction
+            count which will be taken into account when we store this count in the database. 
+            </param>
+        </member>
         <member name="P:Umbraco.Core.Sync.RefreshInstruction.RefreshType">
             <summary>
             Gets or sets the refresh action type.
@@ -36138,6 +36486,14 @@
             <summary>
             Gets or sets the ids data value.
             </summary>
+        </member>
+        <member name="P:Umbraco.Core.Sync.RefreshInstruction.JsonIdCount">
+            <summary>
+            Gets or sets the number of Ids contained in the JsonIds json value
+            </summary>
+            <remarks>
+            This is used to determine the instruction count per row
+            </remarks>
         </member>
         <member name="P:Umbraco.Core.Sync.RefreshInstruction.JsonPayload">
             <summary>
